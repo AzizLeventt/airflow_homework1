@@ -9,21 +9,15 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import psycopg2
 
-# ---------------------------------------------------------------------------
-# MongoDB setup (single client reused by all tasks)
-# ---------------------------------------------------------------------------
 MONGO_URI = ("mongodb+srv://cetingokhan:cetingokhan@cluster0.ff5aw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 client = MongoClient(MONGO_URI, server_api=ServerApi("1"))
 
-# Target Mongo collections
+
 DB_NAME = "bigdata_training"
 SRC_COLL = "sample_coll"                         
 ANOMALIES_COLL = "anomalies_azizmutlulevent"
 LOG_COLL = "log_azizmutlulevent"
 
-# ---------------------------------------------------------------------------
-# Sensor event class
-# ---------------------------------------------------------------------------
 class HeatAndHumidityMeasureEvent:
     def __init__(self, temperature: int, humidity: int, timestamp: datetime, creator: str):
         self.temperature = temperature
@@ -31,9 +25,7 @@ class HeatAndHumidityMeasureEvent:
         self.timestamp = timestamp
         self.creator = creator
 
-# ---------------------------------------------------------------------------
-# Task functions
-# ---------------------------------------------------------------------------
+
 
 def generate_random_heat_and_humidity_data(record_count: int = 10):
     records = []
@@ -57,7 +49,7 @@ def create_sample_data_on_mongodb(**_):
 
 def copy_anomalies_into_new_collection(**_):
     db = client[DB_NAME]
-    # Ensure anomalies collection exists (MongoDB auto-creates on insert)
+   
     if ANOMALIES_COLL not in db.list_collection_names():
         db.create_collection(ANOMALIES_COLL)
 
@@ -98,9 +90,7 @@ def copy_airflow_logs_into_new_collection(**_):
             "created_at": now,
         })
 
-# ---------------------------------------------------------------------------
-# DAG definition
-# ---------------------------------------------------------------------------
+
 with DAG(
     dag_id="homework",
     start_date=datetime(2022, 1, 1),
@@ -127,6 +117,6 @@ with DAG(
 
     finaltask = DummyOperator(task_id="finaltask")
 
-    # Branching per flow.png
+    
     start >> generate_and_save >> copy_anomalies >> finaltask
     start >> aggregate_logs >> finaltask
